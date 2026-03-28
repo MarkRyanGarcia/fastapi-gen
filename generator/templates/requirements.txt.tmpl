@@ -1,0 +1,16 @@
+fastapi[standard]
+pydantic[email]
+pydantic-settings
+python-dotenv
+{{- if .IncludeSQLAlchemy }}
+sqlalchemy
+alembic
+{{- end }}
+{{- if .IncludeMongoDB }}
+beanie
+motor
+{{- end }}
+passlib[bcrypt]
+python-dotenv
+httpx
+pytest

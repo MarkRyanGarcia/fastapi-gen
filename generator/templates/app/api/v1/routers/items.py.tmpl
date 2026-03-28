@@ -1,0 +1,13 @@
+from fastapi import APIRouter
+from app.schemas.item import ItemCreate, ItemRead
+from app.services.item_service import ItemService
+
+router = APIRouter()
+
+@router.get("", response_model=list[ItemRead])
+async def list_items():
+    return await ItemService.get_all()
+
+@router.post("", response_model=ItemRead)
+async def create_item(item: ItemCreate):
+    return await ItemService.create(item)

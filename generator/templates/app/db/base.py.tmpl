@@ -1,0 +1,8 @@
+{{- if .IncludeSQLAlchemy }}
+from sqlalchemy.orm import DeclarativeBase
+
+class Base(DeclarativeBase):
+    pass
+{{- else }}
+# Define your base model/document class here
+{{- end }}

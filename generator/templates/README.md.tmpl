@@ -1,0 +1,30 @@
+# {{ .ProjectName }}
+
+Generated with fastapi-gen.
+
+## Setup
+
+```bash
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+## Run
+
+```bash
+fastapi dev app
+```
+
+## Migrations
+
+```bash
+alembic revision --autogenerate -m "init"
+alembic upgrade head
+```
+
+## Test
+
+```bash
+pytest
+```

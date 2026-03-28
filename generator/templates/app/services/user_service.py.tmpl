@@ -1,0 +1,12 @@
+from app.schemas.user import UserCreate, UserRead
+
+class UserService:
+    @staticmethod
+    async def get_all() -> list[UserRead]:
+        # TODO: implement DB query
+        return []
+
+    @staticmethod
+    async def create(user: UserCreate) -> UserRead:
+        # TODO: implement DB insert
+        raise NotImplementedError

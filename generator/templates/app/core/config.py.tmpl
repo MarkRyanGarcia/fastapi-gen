@@ -1,0 +1,14 @@
+from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Settings(BaseSettings):
+    APP_NAME: str = "{{ .ProjectName }}"
+    DATABASE_URL: str = "postgresql://user:password@localhost:5432/{{ .ProjectName }}"
+    SECRET_KEY: str = "change-me"
+
+    class Config:
+        env_file = ".env"
+
+settings = Settings()

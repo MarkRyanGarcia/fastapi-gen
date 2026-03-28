@@ -1,0 +1,13 @@
+from fastapi import APIRouter, Depends
+from app.schemas.user import UserCreate, UserRead
+from app.services.user_service import UserService
+
+router = APIRouter()
+
+@router.get("", response_model=list[UserRead])
+async def list_users():
+    return await UserService.get_all()
+
+@router.post("", response_model=UserRead)
+async def create_user(user: UserCreate):
+    return await UserService.create(user)

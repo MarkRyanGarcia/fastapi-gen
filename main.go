@@ -25,11 +25,13 @@ func main() {
 		fmt.Printf("\n🚀 Creating project '%s'...\n", m.ProjectName)
 		
 		isSQL := strings.Contains(m.Selected, "SQL") || strings.Contains(m.Selected, "SQLite")
+		isMongo := strings.Contains(m.Selected, "MongoDB")
 
 		config := generator.ProjectConfig{
 			ProjectName:       m.ProjectName,
 			Database:          m.Selected,
 			IncludeSQLAlchemy: isSQL,
+			IncludeMongoDB:    isMongo,
 		}
 
 		err := generator.CreateProject(config)

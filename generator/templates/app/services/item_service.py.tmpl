@@ -1,0 +1,12 @@
+from app.schemas.item import ItemCreate, ItemRead
+
+class ItemService:
+    @staticmethod
+    async def get_all() -> list[ItemRead]:
+        # TODO: implement DB query
+        return []
+
+    @staticmethod
+    async def create(item: ItemCreate) -> ItemRead:
+        # TODO: implement DB insert
+        raise NotImplementedError
