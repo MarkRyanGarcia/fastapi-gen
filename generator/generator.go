@@ -4,6 +4,7 @@ import (
 	"embed"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"text/template"
 )
@@ -96,7 +97,24 @@ func CreateProject(cfg ProjectConfig) error {
 			return err
 		}
 	}
+	if cfg.UsePipenv {
+		if err := runPipenvInstall(cfg.OutputDir); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+func runPipenvInstall(dir string) error {
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command("pipenv", "install", "--dev")
+	cmd.Dir = absDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func writeTemplate(cfg ProjectConfig, dest, tmplPath string) error {
