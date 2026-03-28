@@ -17,6 +17,7 @@ type ProjectConfig struct {
 	Database          string
 	IncludeSQLAlchemy bool
 	IncludeMongoDB    bool
+	UsePipenv         bool
 }
 
 // fileMap maps destination path -> template path (executed as Go templates)
@@ -45,6 +46,7 @@ func fileMap() map[string]string {
 		"tests/test_users.py":               "templates/tests/test_users.py.tmpl",
 		"tests/test_items.py":               "templates/tests/test_items.py.tmpl",
 		"requirements.txt":                  "templates/requirements.txt.tmpl",
+		"Pipfile":                            "templates/Pipfile.tmpl",
 		".env":                              "templates/.env.tmpl",
 		"README.md":                         "templates/README.md.tmpl",
 	}
@@ -73,6 +75,13 @@ func CreateProject(cfg ProjectConfig) error {
 	}
 	for dest, tmplPath := range fileMap() {
 		if cfg.IncludeMongoDB && alembicFiles[dest] {
+			continue
+		}
+		// Skip requirements.txt if using pipenv, skip Pipfile if not
+		if dest == "requirements.txt" && cfg.UsePipenv {
+			continue
+		}
+		if dest == "Pipfile" && !cfg.UsePipenv {
 			continue
 		}
 		if err := writeTemplate(cfg, dest, tmplPath); err != nil {

@@ -12,6 +12,7 @@ type sessionState int
 const (
 	stateInputName sessionState = iota
 	stateSelectDB
+	stateSelectPipenv
 )
 
 type Model struct {
@@ -21,6 +22,7 @@ type Model struct {
 	Cursor      int
 	Choices     []string
 	Selected    string
+	UsePipenv   bool
 	Quitting    bool
 }
 
@@ -65,24 +67,31 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter":
 			if m.State == stateInputName {
-				
 				m.ProjectName = m.TextInput.Value()
 				if m.ProjectName == "" {
-					m.ProjectName = "my-fastapi-app" // Default
+					m.ProjectName = "my-fastapi-app"
 				}
 				m.State = stateSelectDB
+				m.Cursor = 0
 				return m, nil
-			} else {
+			} else if m.State == stateSelectDB {
 				m.Selected = m.Choices[m.Cursor]
+				m.State = stateSelectPipenv
+				m.Cursor = 0
+				return m, nil
+			} else if m.State == stateSelectPipenv {
+				m.UsePipenv = m.Cursor == 0
 				return m, tea.Quit
 			}
 
 		case "up", "k":
-			if m.State == stateSelectDB && m.Cursor > 0 {
+			if m.Cursor > 0 {
 				m.Cursor--
 			}
 		case "down", "j":
 			if m.State == stateSelectDB && m.Cursor < len(m.Choices)-1 {
+				m.Cursor++
+			} else if m.State == stateSelectPipenv && m.Cursor < 1 {
 				m.Cursor++
 			}
 		}
@@ -111,11 +120,24 @@ func (m Model) View() string {
 		) + "\n\n(press enter to continue)\n"
 	}
 
-	// Database Selection View
-	s := headerStyle.Render("Step 2: Database Selection") + "\n\n"
-	s += fmt.Sprintf("Project: %s\n\nChoose a DB:\n", m.ProjectName)
+	if m.State == stateSelectDB {
+		s := headerStyle.Render("Step 2: Database Selection") + "\n\n"
+		s += fmt.Sprintf("Project: %s\n\nChoose a DB:\n", m.ProjectName)
+		for i, choice := range m.Choices {
+			cursor := " "
+			if m.Cursor == i {
+				cursor = ">"
+			}
+			s += fmt.Sprintf("%s %s\n", cursor, choice)
+		}
+		return s + "\n(j/k to move, enter to select)\n"
+	}
 
-	for i, choice := range m.Choices {
+	// Pipenv selection
+	s := headerStyle.Render("Step 3: Package Manager") + "\n\n"
+	s += fmt.Sprintf("Project: %s | DB: %s\n\nUse pipenv?\n", m.ProjectName, m.Selected)
+	pipenvChoices := []string{"Yes (pipenv)", "No (requirements.txt)"}
+	for i, choice := range pipenvChoices {
 		cursor := " "
 		if m.Cursor == i {
 			cursor = ">"

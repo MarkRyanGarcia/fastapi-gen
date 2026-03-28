@@ -57,6 +57,7 @@ func main() {
 			Database:          m.Selected,
 			IncludeSQLAlchemy: isSQL,
 			IncludeMongoDB:    isMongo,
+			UsePipenv:         m.UsePipenv,
 		}
 
 		err := generator.CreateProject(config)

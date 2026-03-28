@@ -1,0 +1,26 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = {extras = ["standard"], version = "*"}
+pydantic = {extras = ["email"], version = "*"}
+pydantic-settings = "*"
+python-dotenv = "*"
+{{- if .IncludeSQLAlchemy }}
+sqlalchemy = "*"
+alembic = "*"
+psycopg2-binary = "*"
+{{- end }}
+{{- if .IncludeMongoDB }}
+pymongo = {extras = ["srv"], version = "*"}
+certifi = "*"
+{{- end }}
+
+[dev-packages]
+httpx = "*"
+pytest = "*"
+
+[requires]
+python_version = "3.11"
