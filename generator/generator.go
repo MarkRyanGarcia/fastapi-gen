@@ -32,7 +32,6 @@ func fileMap() map[string]string {
 		"conftest.py":                       "templates/conftest.py.tmpl",
 		"alembic.ini":                       "templates/alembic.ini.tmpl",
 		"migrations/env.py":                 "templates/migrations/env.py.tmpl",
-		"migrations/versions/.gitkeep":      "templates/migrations/versions/.gitkeep.tmpl",
 		"app/main.py":                       "templates/app/main.py.tmpl",
 		"app/__init__.py":                   "templates/app/__init__.py.tmpl",
 		"app/api/v1/__init__.py":            "templates/app/api/v1/__init__.py.tmpl",
@@ -65,9 +64,8 @@ func rawFileMap() map[string]string {
 }
 
 var alembicFiles = map[string]bool{
-	"alembic.ini":              true,
-	"migrations/env.py":        true,
-	"migrations/versions/.gitkeep": true,
+	"alembic.ini":       true,
+	"migrations/env.py": true,
 }
 
 var alembicRawFiles = map[string]bool{
@@ -77,6 +75,12 @@ var alembicRawFiles = map[string]bool{
 func CreateProject(cfg ProjectConfig) error {
 	if cfg.OutputDir == "" {
 		cfg.OutputDir = cfg.ProjectName
+	}
+	if cfg.IncludeSQLAlchemy {
+		versionsDir := filepath.Join(cfg.OutputDir, "migrations", "versions")
+		if err := os.MkdirAll(versionsDir, 0755); err != nil {
+			return err
+		}
 	}
 	for dest, tmplPath := range fileMap() {
 		if cfg.IncludeMongoDB && alembicFiles[dest] {
@@ -182,4 +186,24 @@ func copyRaw(outputDir, dest, src string) error {
 	defer out.Close()
 	_, err = io.Copy(out, in)
 	return err
+}
+
+// RunDevServer starts `fastapi dev app` inside the project directory.
+// For pipenv it runs via `pipenv run`, for venv it uses the .venv binary directly.
+func RunDevServer(dir string, usePipenv bool) error {
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		return err
+	}
+	var cmd *exec.Cmd
+	if usePipenv {
+		cmd = exec.Command("pipenv", "run", "fastapi", "dev", "app")
+	} else {
+		cmd = exec.Command(".venv/bin/fastapi", "dev", "app")
+	}
+	cmd.Dir = absDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	return cmd.Run()
 }

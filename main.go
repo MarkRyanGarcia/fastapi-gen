@@ -6,10 +6,22 @@ import (
 	"path/filepath"
 	"strings"
 
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/markryangarcia/fastapi-gen/generator"
 	"github.com/markryangarcia/fastapi-gen/tui"
-	tea "github.com/charmbracelet/bubbletea"
 )
+
+var (
+	green  = lipgloss.NewStyle().Foreground(lipgloss.Color("78"))
+	cyan   = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
+	muted  = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	border = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	check  = lipgloss.NewStyle().Foreground(lipgloss.Color("78")).Bold(true)
+	errSty = lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true)
+)
+
+func pipe() string { return border.Render("│") }
 
 func main() {
 	var initialName string
@@ -17,10 +29,9 @@ func main() {
 	if len(os.Args) > 1 {
 		arg := os.Args[1]
 		if arg == "." {
-			// Use current directory name as project name, scaffold in-place
 			cwd, err := os.Getwd()
 			if err != nil {
-				fmt.Printf("❌ Could not get current directory: %v\n", err)
+				fmt.Println(errSty.Render("❌ Could not get current directory: " + err.Error()))
 				os.Exit(1)
 			}
 			initialName = filepath.Base(cwd)
@@ -30,65 +41,73 @@ func main() {
 	}
 
 	p := tea.NewProgram(tui.InitialModelWithName(initialName))
-
 	finalModel, err := p.Run()
 	if err != nil {
-		fmt.Printf("Error: %v", err)
+		fmt.Println(errSty.Render("Error: " + err.Error()))
 		os.Exit(1)
 	}
 
 	m := finalModel.(tui.Model)
 
-	if m.Selected != "" && !m.Quitting {
-		isSQL := strings.Contains(m.Selected, "SQL")
-		isMongo := strings.Contains(m.Selected, "MongoDB")
+	if m.Selected == "" || m.Quitting {
+		fmt.Println(muted.Render("\n  Generation cancelled."))
+		return
+	}
 
-		// Determine output directory
-		outDir := m.ProjectName
-		if len(os.Args) > 1 && os.Args[1] == "." {
-			outDir = "."
-		}
+	// Print vite-style summary
+	fmt.Println(m.Summary())
 
-		fmt.Printf("\n🚀 Creating project '%s'...\n", m.ProjectName)
+	isSQL := strings.Contains(m.Selected, "SQL")
+	isMongo := strings.Contains(m.Selected, "MongoDB")
 
-		config := generator.ProjectConfig{
-			ProjectName:       m.ProjectName,
-			OutputDir:         outDir,
-			Database:          m.Selected,
-			IncludeSQLAlchemy: isSQL,
-			IncludeMongoDB:    isMongo,
-			AuthProvider:      m.AuthProvider,
-			UseClerk:          m.AuthProvider == "Clerk",
-			UseCognito:        m.AuthProvider == "AWS Cognito",
-			UsePipenv:         m.UsePipenv,
-			SetupVenv:         m.SetupVenv,
-		}
+	outDir := m.ProjectName
+	if len(os.Args) > 1 && os.Args[1] == "." {
+		outDir = "."
+	}
 
-		err := generator.CreateProject(config)
-		if err != nil {
-			fmt.Printf("❌ Failed to create project: %v\n", err)
+	config := generator.ProjectConfig{
+		ProjectName:       m.ProjectName,
+		OutputDir:         outDir,
+		Database:          m.Selected,
+		IncludeSQLAlchemy: isSQL,
+		IncludeMongoDB:    isMongo,
+		AuthProvider:      m.AuthProvider,
+		UseClerk:          m.AuthProvider == "Clerk",
+		UseCognito:        m.AuthProvider == "AWS Cognito",
+		UsePipenv:         m.UsePipenv,
+		SetupVenv:         m.SetupVenv,
+	}
+
+	if err := generator.CreateProject(config); err != nil {
+		fmt.Println(errSty.Render("❌ Failed to create project: " + err.Error()))
+		os.Exit(1)
+	}
+
+	fmt.Println(check.Render("◇  ") + green.Render("Done! Project generated in ./"+outDir))
+	fmt.Println(pipe())
+
+	if m.SetupVenv {
+		// activate + run
+		fmt.Println(pipe() + "  " + cyan.Render("Starting dev server..."))
+		fmt.Println(pipe())
+		if err := generator.RunDevServer(outDir, m.UsePipenv); err != nil {
+			fmt.Println(errSty.Render("❌ Failed to start dev server: " + err.Error()))
 			os.Exit(1)
 		}
-
-		fmt.Printf("✅ Success! Project generated in ./%s\n", outDir)
-		if m.SetupVenv {
-			cdStep := ""
-			if outDir != "." {
-				cdStep = fmt.Sprintf("   cd %s\n", outDir)
-			}
-			if m.UsePipenv {
-				fmt.Printf("\n💡 To get started:\n%s   pipenv shell\n   fastapi dev app\n", cdStep)
-			} else {
-				fmt.Printf("\n💡 To get started:\n%s   source .venv/bin/activate\n   fastapi dev app\n", cdStep)
-			}
-		} else {
-			if outDir != "." {
-				fmt.Printf("\n💡 To get started:\n   cd %s\n   fastapi dev app\n", outDir)
-			} else {
-				fmt.Printf("\n💡 To get started:\n   fastapi dev app\n")
-			}
-		}
 	} else {
-		fmt.Println("\nGeneration cancelled.")
+		// just print next steps
+		fmt.Println(pipe() + "  " + cyan.Render("Next steps:"))
+		if outDir != "." {
+			fmt.Println(pipe() + "  " + muted.Render("cd "+outDir))
+		}
+		if m.UsePipenv {
+			fmt.Println(pipe() + "  " + muted.Render("pipenv install"))
+			fmt.Println(pipe() + "  " + muted.Render("pipenv shell"))
+		} else {
+			fmt.Println(pipe() + "  " + muted.Render("pip install -r requirements.txt"))
+			fmt.Println(pipe() + "  " + muted.Render("source .venv/bin/activate"))
+		}
+		fmt.Println(pipe() + "  " + muted.Render("fastapi dev app"))
+		fmt.Println(pipe())
 	}
 }
