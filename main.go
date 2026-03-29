@@ -76,6 +76,23 @@ func main() {
 		UseCognito:        m.AuthProvider == "AWS Cognito",
 		UsePipenv:         m.UsePipenv,
 		SetupVenv:         m.SetupVenv,
+		UseDocker:         m.UseDocker,
+	}
+
+	if m.UseDocker && !generator.IsDockerRunning() {
+		arg0 := "fastapi-gen"
+		if len(os.Args) > 0 {
+			arg0 = os.Args[0]
+		}
+		rerunArgs := m.ProjectName
+		if len(os.Args) > 1 && os.Args[1] == "." {
+			rerunArgs = "."
+		}
+		fmt.Println(errSty.Render("❌ Docker doesn't appear to be running."))
+		fmt.Println(pipe() + "  " + muted.Render("Open Docker Desktop (or start the Docker daemon), then run:"))
+		fmt.Println(pipe() + "  " + cyan.Render(arg0+" "+rerunArgs))
+		fmt.Println(pipe())
+		os.Exit(1)
 	}
 
 	if err := generator.CreateProject(config); err != nil {
@@ -87,12 +104,20 @@ func main() {
 	fmt.Println(pipe())
 
 	if m.SetupVenv {
-		// activate + run
-		fmt.Println(pipe() + "  " + cyan.Render("Starting dev server..."))
-		fmt.Println(pipe())
-		if err := generator.RunDevServer(outDir, m.UsePipenv); err != nil {
-			fmt.Println(errSty.Render("❌ Failed to start dev server: " + err.Error()))
-			os.Exit(1)
+		if m.UseDocker {
+			fmt.Println(pipe() + "  " + cyan.Render("Running docker compose up --build..."))
+			fmt.Println(pipe())
+			if err := generator.RunDockerCompose(outDir); err != nil {
+				fmt.Println(errSty.Render("❌ Failed to start Docker: " + err.Error()))
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println(pipe() + "  " + cyan.Render("Starting dev server..."))
+			fmt.Println(pipe())
+			if err := generator.RunDevServer(outDir, m.UsePipenv); err != nil {
+				fmt.Println(errSty.Render("❌ Failed to start dev server: " + err.Error()))
+				os.Exit(1)
+			}
 		}
 	} else {
 		// just print next steps
@@ -100,14 +125,17 @@ func main() {
 		if outDir != "." {
 			fmt.Println(pipe() + "  " + muted.Render("cd "+outDir))
 		}
-		if m.UsePipenv {
+		if m.UseDocker {
+			fmt.Println(pipe() + "  " + muted.Render("docker compose up --build"))
+		} else if m.UsePipenv {
 			fmt.Println(pipe() + "  " + muted.Render("pipenv install"))
 			fmt.Println(pipe() + "  " + muted.Render("pipenv shell"))
+			fmt.Println(pipe() + "  " + muted.Render("fastapi dev app"))
 		} else {
 			fmt.Println(pipe() + "  " + muted.Render("pip install -r requirements.txt"))
 			fmt.Println(pipe() + "  " + muted.Render("source .venv/bin/activate"))
+			fmt.Println(pipe() + "  " + muted.Render("fastapi dev app"))
 		}
-		fmt.Println(pipe() + "  " + muted.Render("fastapi dev app"))
 		fmt.Println(pipe())
 	}
 }

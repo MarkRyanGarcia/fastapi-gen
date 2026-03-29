@@ -23,6 +23,7 @@ type ProjectConfig struct {
 	UseCognito        bool
 	UsePipenv         bool
 	SetupVenv         bool
+	UseDocker         bool
 }
 
 // fileMap maps destination path -> template path (executed as Go templates)
@@ -53,6 +54,9 @@ func fileMap() map[string]string {
 		"Pipfile":                            "templates/Pipfile.tmpl",
 		".env":                              "templates/.env.tmpl",
 		"README.md":                         "templates/README.md.tmpl",
+		"Dockerfile":                        "templates/Dockerfile.tmpl",
+		"docker-compose.yml":                "templates/docker-compose.yml.tmpl",
+		".dockerignore":                     "templates/.dockerignore.tmpl",
 	}
 }
 
@@ -91,6 +95,10 @@ func CreateProject(cfg ProjectConfig) error {
 			continue
 		}
 		if dest == "Pipfile" && !cfg.UsePipenv {
+			continue
+		}
+		// Skip Docker files if not requested
+		if !cfg.UseDocker && (dest == "Dockerfile" || dest == "docker-compose.yml" || dest == ".dockerignore") {
 			continue
 		}
 		if err := writeTemplate(cfg, dest, tmplPath); err != nil {
@@ -201,6 +209,28 @@ func RunDevServer(dir string, usePipenv bool) error {
 	} else {
 		cmd = exec.Command(".venv/bin/fastapi", "dev", "app")
 	}
+	cmd.Dir = absDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	return cmd.Run()
+}
+
+// IsDockerRunning returns true if the Docker daemon is reachable.
+func IsDockerRunning() bool {
+	cmd := exec.Command("docker", "info")
+	cmd.Stdout = nil
+	cmd.Stderr = nil
+	return cmd.Run() == nil
+}
+
+// RunDockerCompose runs `docker compose up --build` inside the project directory.
+func RunDockerCompose(dir string) error {
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command("docker", "compose", "up", "--build")
 	cmd.Dir = absDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

@@ -32,6 +32,7 @@ const (
 	stateSelectDB
 	stateSelectAuth
 	stateSelectPipenv
+	stateSelectDocker
 	stateSelectVenv
 	stateDone
 )
@@ -48,6 +49,7 @@ type Model struct {
 	AuthProvider string
 	UsePipenv    bool
 	SetupVenv    bool
+	UseDocker    bool
 	Quitting     bool
 }
 
@@ -114,6 +116,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.Cursor = 0
 			case stateSelectPipenv:
 				m.UsePipenv = m.Cursor == 0
+				m.State = stateSelectDocker
+				m.Cursor = 0
+			case stateSelectDocker:
+				m.UseDocker = m.Cursor == 0
 				m.State = stateSelectVenv
 				m.Cursor = 0
 			case stateSelectVenv:
@@ -137,7 +143,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.Cursor < 2 {
 					m.Cursor++
 				}
-			case stateSelectPipenv, stateSelectVenv:
+			case stateSelectPipenv, stateSelectVenv, stateSelectDocker:
 				if m.Cursor < 1 {
 					m.Cursor++
 				}
@@ -225,11 +231,24 @@ func (m Model) View() string {
 			hint,
 		)
 
-	case stateSelectVenv:
+	case stateSelectDocker:
 		return fmt.Sprintf(
 			"%s\n%s\n\n%s\n%s",
 			pipe(),
-			pipe()+"  "+cyan.Render("Install with "+pkgManagerLabel(m.UsePipenv)+" and start now?"),
+			pipe()+"  "+cyan.Render("Add Docker support?"),
+			renderOptions([]string{"Yes", "No"}, m.Cursor),
+			hint,
+		)
+
+	case stateSelectVenv:
+		startLabel := "Install with " + pkgManagerLabel(m.UsePipenv) + " and start now?"
+		if m.UseDocker {
+			startLabel = "Run docker compose up --build now?"
+		}
+		return fmt.Sprintf(
+			"%s\n%s\n\n%s\n%s",
+			pipe(),
+			pipe()+"  "+cyan.Render(startLabel),
 			renderOptions([]string{"Yes", "No"}, m.Cursor),
 			hint,
 		)
@@ -253,6 +272,10 @@ func (m Model) Summary() string {
 	if m.SetupVenv {
 		installNow = "Yes"
 	}
+	docker := "No"
+	if m.UseDocker {
+		docker = "Yes"
+	}
 
 	var sb strings.Builder
 	sb.WriteString(pipe() + "\n")
@@ -261,6 +284,7 @@ func (m Model) Summary() string {
 	sb.WriteString(summaryRow("Auth:          ", m.AuthProvider))
 	sb.WriteString(summaryRow("Pkg manager:   ", pkgManager))
 	sb.WriteString(summaryRow("Install & start: ", installNow))
+	sb.WriteString(summaryRow("Docker:        ", docker))
 	sb.WriteString(pipe() + "\n")
 	sb.WriteString(checkSty.Render("◇  ") + green.Render("Scaffolding project in ./"+m.ProjectName+"...") + "\n")
 

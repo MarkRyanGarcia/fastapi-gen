@@ -1,0 +1,48 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+{{- if .IncludeSQLAlchemy }}
+      - db
+{{- else if .IncludeMongoDB }}
+      - mongo
+{{- end }}
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+{{- if .IncludeSQLAlchemy }}
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: {{ .ProjectName }}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+{{- else if .IncludeMongoDB }}
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+{{- end }}
+{{- if .IncludeSQLAlchemy }}
+
+volumes:
+  postgres_data:
+{{- else if .IncludeMongoDB }}
+
+volumes:
+  mongo_data:
+{{- end }}

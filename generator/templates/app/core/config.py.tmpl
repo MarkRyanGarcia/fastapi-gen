@@ -6,9 +6,17 @@ load_dotenv()
 class Settings(BaseSettings):
     APP_NAME: str = "{{ .ProjectName }}"
 {{- if .IncludeSQLAlchemy }}
+{{- if .UseDocker }}
+    DATABASE_URL: str = "postgresql://user:password@db:5432/{{ .ProjectName }}"
+{{- else }}
     DATABASE_URL: str = "postgresql://user:password@localhost:5432/{{ .ProjectName }}"
+{{- end }}
 {{- else if .IncludeMongoDB }}
+{{- if .UseDocker }}
+    MONGODB_URL: str = "mongodb://mongo:27017"
+{{- else }}
     MONGODB_URL: str = "mongodb://localhost:27017"
+{{- end }}
     MONGODB_DB: str = "{{ .ProjectName }}"
 {{- end }}
 {{- if .UseClerk }}
