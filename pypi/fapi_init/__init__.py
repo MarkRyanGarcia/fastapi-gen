@@ -1,7 +1,10 @@
-import os
 import sys
+from importlib.metadata import version, PackageNotFoundError
 
-__version__ = os.environ.get("FAPI_INIT_VERSION", "0.0.0")
+try:
+    __version__ = version("fapi-init")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
 
 
 def main() -> None:
