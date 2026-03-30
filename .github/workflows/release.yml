@@ -64,6 +64,7 @@ jobs:
       - name: Build PyPI package
         working-directory: pypi
         run: |
+          cp ../VERSION VERSION
           pip install build
           python -m build
 

@@ -1,0 +1,3 @@
+pypi/VERSION
+pypi/dist/
+pypi/*.egg-info/

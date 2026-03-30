@@ -32,4 +32,4 @@ where = ["."]
 include = ["fapi_init*"]
 
 [tool.setuptools.dynamic]
-version = { file = "../VERSION" }
+version = { file = "VERSION" }
