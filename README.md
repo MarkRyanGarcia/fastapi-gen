@@ -1,6 +1,6 @@
 # fapi-init
 
-A CLI tool that scaffolds a production-ready FastAPI project with an interactive TUI. Choose your database, ORM, auth provider, package manager, and optional Docker/Redis support — and get a fully structured project in seconds.
+A CLI tool that scaffolds a production-ready FastAPI project with an interactive TUI. Choose your database, ORM, auth provider, package manager, and optional Docker/Redis support, and get a fully structured project in seconds.
 
 ![fapi-init-demo](https://github.com/user-attachments/assets/daf1ad03-7a99-4c78-8bd7-9cce442bbfe3)
 
