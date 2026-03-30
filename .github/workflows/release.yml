@@ -11,8 +11,10 @@ permissions:
 
 jobs:
   tag-and-release:
-    name: Tag, GoReleaser & PyPI
+    name: Tag & GoReleaser
     runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.tag.outputs.new_tag }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,7 +38,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Update VERSION file
           echo "${MAJOR}.${MINOR}.$((PATCH + 1))" > VERSION
           git add VERSION
           git commit -m "chore: bump version to $NEW_TAG [skip ci]"
@@ -56,6 +57,21 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  pypi:
+    name: PyPI
+    runs-on: ubuntu-latest
+    needs: tag-and-release
+    environment:
+      name: pypi
+      url: https://pypi.org/p/fapi-init
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.tag-and-release.outputs.new_tag }}
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
