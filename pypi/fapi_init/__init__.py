@@ -1,7 +1,7 @@
 import os
 import sys
 
-__version__ = os.environ.get("FASTAPI_INIT_VERSION", "0.0.0")
+__version__ = os.environ.get("FAPI_INIT_VERSION", "0.0.0")
 
 
 def main() -> None:

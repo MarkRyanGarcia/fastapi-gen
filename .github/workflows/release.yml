@@ -34,7 +34,7 @@ jobs:
     needs: goreleaser
     environment:
       name: pypi
-      url: https://pypi.org/p/fastapi-init
+      url: https://pypi.org/p/fapi-init
     permissions:
       id-token: write
     steps:
@@ -51,7 +51,7 @@ jobs:
         working-directory: pypi
         run: |
           pip install build
-          FASTAPI_INIT_VERSION=${{ env.RELEASE_VERSION }} python -m build
+          FAPI_INIT_VERSION=${{ env.RELEASE_VERSION }} python -m build
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

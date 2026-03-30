@@ -1,4 +1,4 @@
-"""Downloads and caches the fastapi-init binary from GitHub Releases."""
+"""Downloads and caches the fapi-init binary from GitHub Releases."""
 
 import os
 import platform
@@ -9,9 +9,9 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-GITHUB_REPO = "markryangarcia/fastapi-init"
-BIN_NAME = "fastapi-init"
-CACHE_DIR = Path.home() / ".cache" / "fastapi-init"
+GITHUB_REPO = "markryangarcia/fapi-init"
+BIN_NAME = "fapi-init"
+CACHE_DIR = Path.home() / ".cache" / "fapi-init"
 
 
 def _platform_asset() -> str:
@@ -21,11 +21,11 @@ def _platform_asset() -> str:
     arch = "arm64" if machine in ("arm64", "aarch64") else "amd64"
 
     if system == "darwin":
-        return f"fastapi-init_darwin_{arch}.tar.gz"
+        return f"fapi-init_darwin_{arch}.tar.gz"
     elif system == "linux":
-        return f"fastapi-init_linux_{arch}.tar.gz"
+        return f"fapi-init_linux_{arch}.tar.gz"
     elif system == "windows":
-        return f"fastapi-init_windows_{arch}.zip"
+        return f"fapi-init_windows_{arch}.zip"
     else:
         raise RuntimeError(f"Unsupported platform: {system}/{machine}")
 
@@ -46,7 +46,7 @@ def ensure_binary(version: str) -> Path:
     bin_path.parent.mkdir(parents=True, exist_ok=True)
 
     archive_path = bin_path.parent / asset
-    print(f"Downloading fastapi-init v{version}...", file=sys.stderr)
+    print(f"Downloading fapi-init v{version}...", file=sys.stderr)
     urllib.request.urlretrieve(url, archive_path)
 
     if asset.endswith(".zip"):

@@ -5,8 +5,8 @@ before:
     - go mod tidy
 
 builds:
-  - id: fastapi-init
-    binary: fastapi-init
+  - id: fapi-init
+    binary: fapi-init
     goos:
       - linux
       - darwin
@@ -20,8 +20,8 @@ builds:
       - -s -w
 
 archives:
-  - id: fastapi-init
-    name_template: "fastapi-init_{{ .Os }}_{{ .Arch }}"
+  - id: fapi-init
+    name_template: "fapi-init_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
         format: zip
@@ -34,7 +34,7 @@ checksum:
 release:
   github:
     owner: markryangarcia
-    name: fastapi-init
+    name: fapi-init
   draft: false
   prerelease: auto
 
