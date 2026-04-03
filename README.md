@@ -20,7 +20,7 @@ pipx install fastfastapi
 
 ```bash
 go install github.com/markryangarcia/fastfastapi@latest
-go install github.com/markryangarcia/fastfastapi/cmd/ffa@latest
+go install github.com/markryangarcia/fastfastapi/cmd/ffa@latest #for 'ffa' command
 ```
 
 Make sure `$GOPATH/bin` (or `$HOME/go/bin`) is in your `PATH`.
